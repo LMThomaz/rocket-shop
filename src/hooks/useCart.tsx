@@ -45,14 +45,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
         return;
       }
 
-      const responseProduct = await api.get(`products/${productId}`);
-
-      const product: Product = {
-        ...responseProduct.data,
-        amount: 1,
-      };
-
-      const indexProductInCart = cart.findIndex((p) => p.id === product.id);
+      const indexProductInCart = cart.findIndex((p) => p.id === productId);
 
       if (indexProductInCart >= 0) {
         const newAmount = cart[indexProductInCart].amount + 1;
@@ -62,26 +55,32 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
           return;
         }
 
-        const newCart = [...cart];
+        const newCart = cart;
 
-        newCart[indexProductInCart] = {
-          ...product,
-          amount: newAmount,
-        };
+        newCart[indexProductInCart].amount += 1;
 
         setCart([...newCart]);
 
         localStorage.setItem(keyLocalStorage, JSON.stringify(newCart));
 
         toast.success('Produto adicionado ao carrinho');
-        return;
+      } else {
+        const responseProduct = await api.get(`products/${productId}`);
+
+        const product: Product = {
+          ...responseProduct.data,
+          amount: 1,
+        };
+
+        setCart([...cart, product]);
+
+        localStorage.setItem(
+          keyLocalStorage,
+          JSON.stringify([...cart, product])
+        );
+
+        toast.success('Produto adicionado ao carrinho');
       }
-
-      setCart([...cart, product]);
-
-      localStorage.setItem(keyLocalStorage, JSON.stringify([...cart, product]));
-
-      toast.success('Produto adicionado ao carrinho');
     } catch (e) {
       toast.error('Erro na adição do produto');
     }
